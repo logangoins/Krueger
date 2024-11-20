@@ -1,29 +1,42 @@
-﻿using System.Management;
+﻿using System;
+using System.Management;
 
 namespace Krueger.Modules
 {
     internal class Reboot
     {
-        public static void reboot(string computer)
+        public static bool WmiReboot(string computer)
         {
-            ManagementScope scope = new ManagementScope("\\\\" + computer + "\\root\\cimv2");
-            scope.Connect();
-            ObjectQuery query = new ObjectQuery("SELECT * FROM Win32_OperatingSystem");
-            ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
-
-            foreach (ManagementObject os in searcher.Get())
+            try
             {
-                // Obtain in-parameters for the method
-                ManagementBaseObject inParams =
-                    os.GetMethodParameters("Win32Shutdown");
+                ConnectionOptions options = new ConnectionOptions();
+                ManagementScope scope = new ManagementScope("\\\\" + computer + "\\root\\cimv2");
+                scope.Connect();
+                ObjectGetOptions objectGetOptions = new ObjectGetOptions();
+                ManagementPath managementPath = new ManagementPath("Win32_Process");
+                ManagementClass processClass = new ManagementClass(scope, managementPath, objectGetOptions);
+                ManagementBaseObject inParams = processClass.GetMethodParameters("Create");
+                inParams["CommandLine"] = "shutdown /r /t 0";
+                ManagementBaseObject outParams = processClass.InvokeMethod("Create", inParams, null);
 
-                // Add the input parameters.
-                inParams["Flags"] = 2;
-
-                // Execute the method and obtain the return values.
-                ManagementBaseObject outParams =
-                    os.InvokeMethod("Win32Shutdown", inParams, null);
+                if (outParams["returnValue"].ToString() == "0")
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
+            catch (ManagementException err)
+            {
+                Console.WriteLine("An error occurred while trying to execute the WMI method: " + err.Message);
+            }
+            catch (System.UnauthorizedAccessException unauthorizedErr)
+            {
+                Console.WriteLine("Connection error (user name or password might be incorrect): " + unauthorizedErr.Message);
+            }
+            return false;  
 
         }
     }
