@@ -1,43 +1,25 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Management;
+using System.Runtime.InteropServices;
 
 namespace Krueger.Modules
 {
     internal class Reboot
     {
-        public static bool WmiReboot(string computer)
+        public static bool reboot(string computer)
         {
-            try
+            bool shutdown = Interop.InitiateSystemShutdownEx(computer, "testing", 0, true, true, ShutdownReason.SHTDN_REASON_MAJOR_OTHER);
+            if (shutdown)
             {
-                ConnectionOptions options = new ConnectionOptions();
-                ManagementScope scope = new ManagementScope("\\\\" + computer + "\\root\\cimv2");
-                scope.Connect();
-                ObjectGetOptions objectGetOptions = new ObjectGetOptions();
-                ManagementPath managementPath = new ManagementPath("Win32_Process");
-                ManagementClass processClass = new ManagementClass(scope, managementPath, objectGetOptions);
-                ManagementBaseObject inParams = processClass.GetMethodParameters("Create");
-                inParams["CommandLine"] = "shutdown /r /t 0";
-                ManagementBaseObject outParams = processClass.InvokeMethod("Create", inParams, null);
-
-                if (outParams["returnValue"].ToString() == "0")
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                return true;
             }
-            catch (ManagementException err)
+            else
             {
-                Console.WriteLine("An error occurred while trying to execute the WMI method: " + err.Message);
+                string errorMessage = new Win32Exception(Marshal.GetLastWin32Error()).Message;
+                Console.WriteLine("[!] Error: " + errorMessage);
+                return false;
             }
-            catch (System.UnauthorizedAccessException unauthorizedErr)
-            {
-                Console.WriteLine("Connection error (user name or password might be incorrect): " + unauthorizedErr.Message);
-            }
-            return false;  
-
         }
     }
 }
