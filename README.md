@@ -10,16 +10,6 @@ More information about this technique can be found on our blog at : BLOG LINK
 # Usage
 
 ```
- ____  __.                                         
-|    |/ _|______ __ __   ____   ____   ___________ 
-|      < \_  __ \  |  \_/ __ \ / ___\_/ __ \_  __ \
-|    |  \ |  | \/  |  /\  ___// /_/  >  ___/|  | \/
-|____|__ \|__|  |____/  \___  >___  / \___  >__|   
-        \/                  \/_____/      \/
-~~~~~~
-@_logangoins
-@hullabrian
-
 Krueger.exe [Options]
 
 Options:
