@@ -71,6 +71,19 @@ namespace Krueger.Modules
 
         SHTDN_REASON_VALID_BIT_MASK = 0xc0ffffff
     }
+
+    [Flags]
+
+    public enum Service : uint
+    {
+        SERVICE_WIN32_OWN_PROCESS = 0x00000010,
+        SERVICE_WIN32_SHARE_PROCESS = 0x00000020,
+        SERVICE_DEMAND_START = 0x00000003,
+        SERVICE_AUTO_START = 0x00000002,
+        SERVICE_DISABLED = 0x00000004,
+        SERVICE_ERROR_NORMAL = 0x00000001
+    }
+
     internal class Interop
     {
         [DllImport("advapi32.dll", SetLastError = true, BestFitMapping = false, ThrowOnUnmappableChar = true)]
@@ -93,5 +106,59 @@ namespace Krueger.Modules
             bool bRebootAfterShutdown,
             ShutdownReason dwReason
         );
+
+        // Win32 API P/Invoke declarations
+        [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern IntPtr OpenSCManager(string lpMachineName, string lpDatabaseName, uint dwDesiredAccess);
+
+        [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern IntPtr CreateService(
+            IntPtr hSCManager,
+            string lpServiceName,
+            string lpDisplayName,
+            uint dwDesiredAccess,
+            uint dwServiceType,
+            uint dwStartType,
+            uint dwErrorControl,
+            string lpBinaryPathName,
+            string lpLoadOrderGroup,
+            IntPtr lpdwTagId,
+            string lpDependencies,
+            string lpServiceStartName,
+            string lpPassword
+        );
+
+        [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern bool ChangeServiceConfig(
+            IntPtr hService,
+            uint nServiceType,
+            uint nStartType,
+            uint nErrorControl,
+            string lpBinaryPathName,
+            string lpLoadOrderGroup,
+            IntPtr lpdwTagId,
+            string lpDependencies,
+            string lpServiceStartName,
+            string lpPassword,
+            string lpDisplayName
+        );
+
+        [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern IntPtr OpenService(IntPtr hSCManager, string lpServiceName, uint dwDesiredAccess);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+        public static extern uint GetLastError();
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        public static extern bool CloseServiceHandle(IntPtr hSCObject);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+        public static extern bool CloseHandle(IntPtr hObject);
+
+        // Access constants
+        public const uint SC_MANAGER_CREATE_SERVICE = 0x0002;
+        public const uint SC_MANAGER_ALL_ACCESS = 0xF003F;
+        public const uint SERVICE_ALL_ACCESS = 0xF01FF;
+
     }
 }
