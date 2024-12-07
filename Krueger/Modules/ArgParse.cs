@@ -43,7 +43,7 @@ namespace Krueger.Modules
                     }
                     catch
                     {
-                        Console.WriteLine("[!] Please supply all the valid options, use \"Cable.exe -h\" for more information");
+                        Console.WriteLine("[!] Please supply all the valid options, use \"Krueger.exe -h\" for more information");
                         return null;
                     }
                 }
