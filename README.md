@@ -7,16 +7,3 @@ More information about this technique can be found on our blog at : BLOG LINK
 
 ![image](https://github.com/user-attachments/assets/9d6cc181-972e-4e2a-a5e6-beedd6656685)
 
-# Usage
-
-```
-Krueger.exe [Options]
-
-Options:
-	-h/--help                -     Display this help menu
-	--host <hostname>        -     Kill EDR on a specified host
-	--username <username>    -     A username to use for authentication
-	--domain <domain>        -     A domain to use for authentication
-	--password <password>    -     A password to use for authentication
-```
-
