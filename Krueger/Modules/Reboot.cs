@@ -7,9 +7,17 @@ namespace Krueger.Modules
 {
     internal class Reboot
     {
-        public static bool reboot(string computer)
+        public static bool reboot(string computer, bool warn)
         {
-            bool shutdown = Interop.InitiateSystemShutdownEx(computer, "testing", 0, true, true, ShutdownReason.SHTDN_REASON_MAJOR_OTHER);
+            bool shutdown = false;
+            if (warn)
+            {
+                shutdown = Interop.InitiateSystemShutdownEx(computer, "System will restart in 30 seconds due to an update.", 30, true, true, ShutdownReason.SHTDN_REASON_MAJOR_OTHER | ShutdownReason.SHTDN_REASON_MINOR_INSTALLATION);
+            }
+            else
+            {
+                shutdown = Interop.InitiateSystemShutdownEx(computer, "", 0, true, true, ShutdownReason.SHTDN_REASON_MAJOR_OTHER);
+            }
             if (shutdown)
             {
                 return true;

