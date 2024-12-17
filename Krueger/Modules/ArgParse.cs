@@ -24,7 +24,7 @@ namespace Krueger.Modules
                 "\t--username <username>    -     A username to use for authentication\n" +
                 "\t--domain <domain>        -     A domain to use for authentication\n" +
                 "\t--password <password>    -     A password to use for authentication\n" +
-                "\t--update                 -     Simulate a Windows update to reboot in 30 seconds\n"
+                "\t--update                 -     Display a prompt the device will reboot in 2 minutes\n"
                 ;
 
             Console.WriteLine(help);

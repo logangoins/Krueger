@@ -12,7 +12,7 @@ namespace Krueger.Modules
             bool shutdown = false;
             if (warn)
             {
-                shutdown = Interop.InitiateSystemShutdownEx(computer, "System will restart in 30 seconds due to an update.", 30, true, true, ShutdownReason.SHTDN_REASON_MAJOR_OTHER | ShutdownReason.SHTDN_REASON_MINOR_INSTALLATION);
+                shutdown = Interop.InitiateSystemShutdownEx(computer, "System will restart in 2 minutes due to an update.", 120, true, true, ShutdownReason.SHTDN_REASON_MAJOR_OTHER | ShutdownReason.SHTDN_REASON_MINOR_INSTALLATION);
             }
             else
             {
