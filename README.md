@@ -3,7 +3,7 @@ Krueger is a Proof of Concept (PoC) .NET post-exploitation toolkit for remotely 
 
 Krueger can also be run from memory using tools such as `execute-assembly` and `inlineExecute-Assembly` (@anthemtotheego) . Additionally, to prevent the need to load a WDAC policy from disk while executing Krueger from memory, Krueger includes an embedded WDAC policy inside of the .NET assembly inserted at compile time in which it reads from memory and writes to a target at runtime.
 
-More information about this technique can be found on our blog at: [https://beierle.win/2024-11-20-Killing-EDR-with-WDAC](https://beierle.win/2024-11-20-Killing-EDR-with-WDAC/)
+More information about this technique can be found on our blog at: [https://beierle.win/2024-11-20-Killing-EDR-with-WDAC](https://beierle.win/2024-12-18-Weaponizing-WDAC-Killing-the-Dreams-of-EDR)
 
 ![image](https://github.com/user-attachments/assets/9d6cc181-972e-4e2a-a5e6-beedd6656685)
 
