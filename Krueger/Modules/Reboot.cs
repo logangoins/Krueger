@@ -18,16 +18,13 @@ namespace Krueger.Modules
             {
                 shutdown = Interop.InitiateSystemShutdownEx(computer, "", 0, true, true, ShutdownReason.SHTDN_REASON_MAJOR_OTHER);
             }
-            if (shutdown)
-            {
-                return true;
-            }
-            else
+            if (!shutdown)
             {
                 string errorMessage = new Win32Exception(Marshal.GetLastWin32Error()).Message;
                 Console.WriteLine("[!] Error: " + errorMessage);
                 return false;
             }
+            return true;
         }
     }
 }
