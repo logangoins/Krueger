@@ -24,7 +24,7 @@ namespace Krueger.Modules
                 "\t--username <username>    -     A username to use for authentication\n" +
                 "\t--domain <domain>        -     A domain to use for authentication\n" +
                 "\t--password <password>    -     A password to use for authentication\n" +
-                "\t--update                 -     Display a prompt the device will reboot in 2 minutes\n"
+                "\t--prompt                 -     Display a prompt the device will reboot in 2 minutes\n"
                 ;
 
             Console.WriteLine(help);
@@ -78,10 +78,10 @@ namespace Krueger.Modules
                 string username = null;
                 string password = null;
                 string domain = null;
-                string update = null;
+                string prompt = null;
 
                 string[] flags = { "--host" , "--username", "--password", "--domain" };
-                string[] options = { "--update" };
+                string[] options = { "--prompt" };
 
                 Dictionary<string, string> cmd = Parse(args, flags, options);
                 if (cmd == null)
@@ -93,7 +93,7 @@ namespace Krueger.Modules
                 cmd.TryGetValue("--username", out username);
                 cmd.TryGetValue("--password", out password);
                 cmd.TryGetValue("--domain", out domain);
-                cmd.TryGetValue("--update", out update);
+                cmd.TryGetValue("--prompt", out prompt);
 
                 WindowsImpersonationContext impersonationContext = null;
 
@@ -131,7 +131,7 @@ namespace Krueger.Modules
                     byte[] policy = Modules.Policy.ReadPolicy();
                     File.WriteAllBytes(target, policy);
                     Console.WriteLine("[+] Moved policy successfully");
-                    bool warn = Convert.ToBoolean(update);
+                    bool warn = Convert.ToBoolean(prompt);
                     bool rebooted = Reboot.reboot(host, warn);
                     if (rebooted)
                     {
