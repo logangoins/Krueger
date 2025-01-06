@@ -18,15 +18,12 @@ rule KRUEGER {
 		$s1 = "Krueger.exe"
 		$s2 = "Krueger.SiPolicy.p7b"
 	condition:
-		pe.imphash() == "f34d5f2d4577ed6d9ceec516c1f5a744" or
-		(
-			(  /* Test for embedded WDAC policy */
-				all of ($wdac*) and
-				#wdac1 >= 3
-			) and 
-			any of ($s*) or
-			any of ($policydst*)
-		)
+		(  /* Test for embedded WDAC policy */
+			all of ($wdac*) and
+			#wdac1 >= 3
+		) and 
+		any of ($s*) or
+		any of ($policydst*)
 }
 
 private rule ENFORCED_BLOCKING_WDAC_POLICY {
